@@ -3,8 +3,7 @@ const router = new express.Router();
 const db = require('../db');
 const ExpressError = require('../expressError'); 
 
-
-// GET /invoices - Getr list of invoices 
+// GET /invoices - Get list of invoices  (Fixed typo)
 router.get('/', async (req, res, next) => {
     try {
         const result = await db.query(`SELECT id, comp_code FROM invoices`); 
@@ -14,8 +13,7 @@ router.get('/', async (req, res, next) => {
     }
 }); 
 
-
-// GET /invoices/:id - get details of a single invoice 
+// GET /invoices/:id - Get details of a single invoice 
 router.get('/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -41,7 +39,6 @@ router.get('/:id', async (req, res, next) => {
     }
 }); 
 
-
 // POST /invoices - Add a new invoice 
 router.post('/', async (req, res, next) => {
     try {
@@ -59,30 +56,33 @@ router.post('/', async (req, res, next) => {
 }); 
 
 // PUT /invoices/:id - Edit existing invoice 
-router.put('/:id', async (req, res, next) => { 
+router.put("/:id", async (req, res, next) => {
     try {
-        const { id } = req.params; 
-        const { amt } = req.body; 
-
-        const result = await db.query(
-            `UPDATE invoices SET amt=$1 WHERE id=$2
-             RETURNING id, comp_code, amt, paid, add_date, paid_date`,
-            [amt, id]
-        );
-
-        if (result.rows.length === 0) {
-            throw new ExpressError("Invoice not found", 404); 
-        }
-
-        return res.json({ invoice: result.rows[0] }); 
+      const { id } = req.params;
+      const { amt, paid } = req.body;
+  
+      let paidDate = null;
+      if (paid) {
+        paidDate = new Date();
+      }
+  
+      const result = await db.query(
+        `UPDATE invoices SET amt=$1, paid=$2, paid_date=$3 WHERE id=$4
+         RETURNING id, comp_code, amt, paid, add_date, paid_date`,
+        [amt, paid, paidDate, id]
+      );
+  
+      if (result.rows.length === 0) {
+        throw new ExpressError("Invoice not found", 404);
+      }
+  
+      return res.json({ invoice: result.rows[0] });
     } catch (err) {
-        return next(err);
+      return next(err);
     }
 });
 
-
-
-// DELETE /invoice/:id - Delete an invoice
+// DELETE /invoices/:id - Delete an invoice  (Updated comment)
 router.delete('/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -102,4 +102,4 @@ router.delete('/:id', async (req, res, next) => {
     }
 });
 
-module.exports = router; 
+module.exports = router;
